@@ -1,0 +1,12 @@
+Date    |   Start   |   Stop    |   Activity
+7/5         9:50PM      11:30PM     coding 
+7/6         9:10AM      10:38AM     debugging
+7/6         8:30PM      9:10PM      coding 
+7/7         9:40AM      10:55AM     debugging
+7/8         10:00AM     11:00AM     debugging 
+7/8         9:00PM       10:00PM    coding
+7/9         10:00AM      11:00AM    debugging
+7/9         10:00PM     11:30PM     coding+degugging 
+7/10        2:00PM      4:00PM      coding     
+7/10        10:00PM     11:10PM     coding
+7/15        3:00PM      6:30PM      coding

@@ -1,0 +1,135 @@
+#!/bin/dash
+
+
+
+
+cd .shrug
+
+
+#check commit version 
+count=0
+for commit_dir in $(ls -a | egrep 'commit.*')
+do
+    if [ $commit_dir != "commit.txt" ]
+    then 
+        #echo $commit_dir
+        count=$(( $count + 1 ))
+    fi
+done
+#echo count $count
+
+#if all the file in index dir and the lastest commit are the same - nothing to commit 
+latest_ver=$(( $count - 1 ))
+#echo latest_ver: $latest_ver
+same=0
+if [ $1 != "-a" ] && [ $latest_ver -ge 0 ]
+then 
+    
+    #look at every file in .index dir
+    for f_i in $(ls .index)
+    do
+        #echo f_i $f_i $(cat .index/$f_i)
+        
+        #check if f_i exists in the latest ver of commit
+        #if yes, we make a copy first then compare 
+        #if no, same += 1, means need to commit 
+        if [ -e commit.$latest_ver/$f_i ]
+        then
+            cp commit.$latest_ver/$f_i f_c
+            #echo f_c $f_c $(cat commit.$latest_ver/$f_i)
+            diff_comp=$(diff .index/$f_i commit.$latest_ver/$f_c)
+            #compare if two files have the same content 
+            if [ "$diff_comp" = "" ]
+            then
+                #echo same
+                same=$(( $same + 0 ))
+            else
+                #echo different
+                same=$(( $same + 1 ))
+            fi
+        else #file doesnt exist in the latest commit ver
+            same=$(( $same + 1 ))
+        fi
+        #echo f_c $f_c $(cat commit.$latest_ver/$f_i)
+       
+    done
+    
+    if [ $same = 0 ]
+    then
+        echo "nothing to commit"
+        exit 1
+    fi
+        
+fi
+
+
+
+#create the latest commit dir to save a copy of the commited file
+new_commit_dir="commit.$count"
+mkdir "$new_commit_dir"
+
+
+#implementation for -a
+#save the file in cwd to index again if it already exists
+if [ $1 = "-a" ]
+then
+    #go back to cwd
+    cd ..
+    #loop thru each file in cwd
+    for f in *
+    do
+        #check if the file exists in index dir 
+        #if yes, update the file in the index dir
+        if [ -e .shrug/.index/$f ]
+        then
+            cp $f .shrug/.index/$f
+        fi
+    done
+    #go back to .shrug
+    cd .shrug
+fi
+#end of implementation for -a
+
+cd .index    
+
+for file in *
+do 
+    #copy all the file to the latest commit dir
+    cp "$file" ../$new_commit_dir
+done
+
+echo "Committed as commit $count"
+
+#go the the .shrug dir
+cd ..
+
+
+
+#create a commit_all.txt to store all the messages 
+#but check if commit_all.txt already exists 
+#if not, create one
+#else append the message to commit_all.txt 
+
+#if -a is in the args
+if [ $1 = "-a" ]
+then 
+    message=$3
+else
+    message=$2
+fi
+
+
+
+if [ ! -f "commit.txt" ]
+then 
+    #echo create commit.txt
+    #echo "write in the first line: $count $message"
+    echo "$count $message" >commit.txt
+else
+    
+    new_line="$count $message"
+    #echo "add new line: $new_line"
+    echo "$new_line" | cat - commit.txt > temp && mv temp commit.txt    
+fi
+
+

@@ -1,0 +1,46 @@
+#!/bin/dash
+
+
+
+
+#check if .shrug dir exists
+if [ ! -d ".shrug" ]
+then 
+    echo "shrug-add: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+
+#check if the index directory has been created 
+#if not - create one
+if [ ! -d ".shrug/.index" ]
+then 
+    #echo create
+    mkdir ".shrug/.index"
+fi
+
+
+
+#in cwd, add the file to the index 
+for add_file in "$@"
+do 
+    #if the file to add exists in index dir but not cwd 
+    if [ ! -e "$add_file" ] && [ -e .shrug/.index/$add_file ]
+    then
+        #echo trial
+        echo " " >.shrug/.index/$add_file
+        exit 1
+    fi
+    
+    #create or overwrite the file to .index dir
+    if [ ! -e $add_file ]
+    then 
+        
+        echo "shrug-add: error: can not open '$add_file'"
+    else
+        cp -f "$add_file" "./.shrug/.index/"
+    fi   
+        
+done
+
+

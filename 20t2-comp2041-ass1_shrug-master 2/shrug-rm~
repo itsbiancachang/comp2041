@@ -1,0 +1,196 @@
+#!/bin/dash
+
+#check commit version
+cd .shrug
+count=0
+for commit_dir in $(ls -a | egrep 'commit.*')
+do
+    if [ $commit_dir != "commit.txt" ]
+    then 
+        count=$(( $count + 1 ))
+    fi
+done
+cd ..
+
+
+  
+#shrug-rm --cached filenames...  
+#remove files only from .index dir
+if [ "$1" = "--cached" ]
+then
+    
+    #assumption: rm 2 files at one time,     
+    k=0
+    if [ $# -gt 2 ]
+    then
+   
+        for file in "$@"
+        do 
+            if [ "$file" != "--cached" ]
+            then 
+                
+              
+                if [ -e .shrug/.index/$file ]
+                then
+                    rm .shrug/.index/$file
+                fi
+            fi 
+        done
+        k=1
+    fi
+    
+    if [ $k -eq '1' ]
+    then
+        exit 1
+    fi
+    
+    
+    #check if the file is in repo - widely used for all rm function 
+    last_c=$(( $count - 1 ))
+    
+    if [ $last_c -ne '-1' ]
+    then
+        
+        #check if the file is in repository: only need to exist in index dir 
+        #look into each repo
+        exist=0
+        i=0
+        while [ $i -lt $count ]
+        do
+            #echo testtt
+            if [ -e .shrug/.index/$2 ]
+            then
+                #echo found
+                exist=$(( $exist + 1 ))
+            else 
+                #echo not found
+                exist=$(( $exist + 0 ))
+            fi
+            
+            i=$(( $i + 1 ))
+        
+        done
+        
+        #file doesnt exist in rep
+        if [ $exist -eq 0 ]
+        then
+            echo "shrug-rm: error: '$2' is not in the shrug repository"
+            exit 1
+        fi  
+     fi
+    
+        #file in index is different to both working file and repo 
+        diff_i_w=$(diff .shrug/.index/$2 $2)
+        
+        if [ -e .shrug/commit.$last_c/$2 ]
+        then
+            diff_i_r=$(diff .shrug/.index/$2 .shrug/commit.$last_c/$2)
+        fi
+        #echo last_c $last_c
+        #echo diff_i_r $diff_i_r
+        if [ "$diff_i_r" = "" ]
+        then 
+            rm .shrug/.index/$2
+        elif [ "$diff_i_w" != "" ] #&& [ "$diff_i_r" != "" ]
+        then
+            echo "shrug-rm: error: '$2' in index is different to both working file and repository"
+            exit 1
+        else
+            rm .shrug/.index/$2
+        fi
+        
+        
+    
+#remove files from cwd + .index dir 
+elif [ "$1" = "--force" ]
+then
+   
+     if [ ! -e .shrug/.index/$2 ]
+     then
+        echo "shrug-rm: error: '$2' is not in the shrug repository"
+     else
+        rm $2 
+        rm .shrug/.index/$2
+     fi
+       
+      
+    
+else #shrug-rm
+    
+    #check if the file is in repo - widely used for all rm function
+    #echo count $count 
+    last_c=$(( $count - 1 ))
+    #echo last_c $last_c
+    
+    if [ $last_c -ne '-1' ]
+    then
+        
+        
+        #check if the file is in repository
+        #look into each repo
+        exist=0
+        i=0
+        #echo i $i 
+        #echo count $count
+        while [ $i -lt $count ]
+        do
+            #echo testtt
+            if [ -e .shrug/.index/$1 ]
+            then
+                #echo found
+                exist=$(( $exist + 1 ))
+            elif [ -e .shrug/commit.$i/$1 ] 
+            then 
+                #echo found
+                exist=$(( $exist + 1 ))
+            else 
+                #echo not found
+                exist=$(( $exist + 0 ))
+            fi
+            
+            i=$(( $i + 1 ))
+        
+        done
+        
+        #file doesnt exist in rep
+        if [ $exist = 0 ]
+        then
+            echo "shrug-rm: error: '$1' is not in the shrug repository"
+            exit 1
+        fi  
+     fi
+        
+        #file has changes staged in the index 
+        diff_s_i=$(diff $1 .shrug/.index/$1)
+         
+        if [ "$diff_s_i" = "" ]
+        then
+            echo "shrug-rm: error: '$1' has changes staged in the index"
+            exit 1
+        fi
+        
+        #file in index is different to both working file and repo 
+        diff_i_w=$(diff .shrug/.index/$1 $1)
+        diff_i_r=$(diff .shrug/.index/$1 .shrug/commit.$last_c/$1)
+        if [ "$diff_i_w" != "" ] && [ "$diff_i_r" != "" ]
+        then
+            echo "shrug-rm: error: '$1' in index is different to both working file and repository"
+            exit 1
+        fi
+        
+        #file in repo is different to working file
+        diff_r_w=$(diff $1 .shrug/commit.$last_c/$1)
+        if [ "$diff_r_w" != "" ]
+        then
+            echo "shrug-rm: error: '$1' in repository is different to working file"
+            exit 1
+        fi
+        
+        
+        
+fi               
+        
+        
+        
+
+    

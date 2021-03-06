@@ -1,0 +1,4 @@
+#!/bin/dash
+
+
+cat .shrug/commit.txt
